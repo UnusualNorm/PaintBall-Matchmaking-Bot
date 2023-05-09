@@ -1,0 +1,13 @@
+{
+    "extends": [
+      "@tsconfig/node-lts/tsconfig",
+      "@tsconfig/strictest/tsconfig",
+      "@tsconfig/esm/tsconfig"
+    ],
+    "compilerOptions": {
+      "outDir": "dist/",
+      "experimentalDecorators": true,
+    },
+    "include": ["src/"],
+    "exclude": ["node_modules/", "dist/"]
+  }
