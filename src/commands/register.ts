@@ -42,5 +42,9 @@ export class RegisterCommand extends Command {
       content: "Your information has been updated!",
       ephemeral: true,
     });
+
+    this.container.logger.info(
+      `Player ${interaction.user.id} (${username}) registered`
+    );
   }
 }

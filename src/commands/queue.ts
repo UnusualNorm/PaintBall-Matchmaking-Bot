@@ -70,6 +70,10 @@ export class QueueCommand extends Command {
         content: "You have been queued!",
         ephemeral: true,
       });
+
+      this.container.logger.info(
+        `Player ${player.id} (${player.username}) queued`
+      );
     } else {
       if (!this.container.client.queue.includes(player.id)) {
         await interaction.reply({
@@ -87,6 +91,10 @@ export class QueueCommand extends Command {
         content: "You have been unqueued!",
         ephemeral: true,
       });
+
+      this.container.logger.info(
+        `Player ${player.id} (${player.username}) unqueued`
+      );
     }
   }
 }

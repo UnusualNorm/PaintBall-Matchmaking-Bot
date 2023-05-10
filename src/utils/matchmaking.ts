@@ -69,6 +69,16 @@ export async function fetchReadyMessage(
   return message;
 }
 
+const taglines = [
+  "joining you on today's mission is",
+  "tagging along,",
+  "joining you in the fight,",
+  "assisting you on the battlefield,",
+  "you will be assisted by",
+  "you will be accompanied by",
+  "your companions for today are",
+];
+
 export async function generateReadyMessage(
   match: Match & { players: Player[]; playerStats: PlayerMatchStat[] },
   playerId: string
@@ -83,7 +93,9 @@ export async function generateReadyMessage(
     (stat) => stat.playerId === playerId
   )?.team;
 
-  return `Match found! You are on ${team} team, along with ${(() => {
+  const tagline = taglines[Math.floor(Math.random() * taglines.length)];
+
+  return `Match found! You are on ${team} team, ${tagline} ${(() => {
     const allies = match.playerStats.filter(
       (stat) => stat.playerId !== playerId && stat.team === team
     );
@@ -104,7 +116,7 @@ You will be playing against ${(() => {
           `${i == enemies.length - 1 ? "and " : ""}<@${enemy.playerId}>`
       )
       .join(", ");
-  })()} on ${team === "blue" ? "red" : "blue"} t eam!
+  })()} on ${team === "blue" ? "red" : "blue"} team!
 React with 👍 to ready up for the match! React with 👎 to cancel the match. (${
     match.readyPlayers.length
   }/${match.players.length})`;

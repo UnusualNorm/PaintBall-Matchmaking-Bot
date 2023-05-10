@@ -22,7 +22,7 @@ export class ReadyListener extends Listener {
       });
 
     if (!readyMessage) return;
-    const match = await this.container.client.prisma.match.findFirst({
+    let match = await this.container.client.prisma.match.findFirst({
       where: { id: readyMessage.matchId },
       include: { players: true, playerStats: true },
     });
@@ -34,29 +34,38 @@ export class ReadyListener extends Listener {
       return;
     }
 
-    if (match.cancelled || match.started) return;
+    if (match.cancelled || match.started) {
+      await this.container.client.prisma.readyMessage.delete({
+        where: { id: readyMessage.id },
+      });
+      return;
+    }
 
     const currentlyReady = !!match.readyPlayers.includes(user.id);
     if (readied && currentlyReady) return;
 
     if (readied) {
-      await this.container.client.prisma.match.update({
+      match = await this.container.client.prisma.match.update({
         where: { id: readyMessage.matchId },
         data: {
           readyPlayers: {
             push: user.id,
           },
         },
+        include: { players: true, playerStats: true },
       });
 
-      if (match.readyPlayers.length + 1 === match.players.length)
+      if (match.readyPlayers.length === match.players.length)
         await startMatch(readyMessage.matchId);
+
+      await updateReadyMessages(match);
     } else {
       const matchUpdate = {
         where: { id: readyMessage.matchId },
         data: {
           cancelled: true,
         },
+        include: { players: true, playerStats: true },
       };
 
       if (currentlyReady)
@@ -64,10 +73,11 @@ export class ReadyListener extends Listener {
           set: match.readyPlayers.filter((id) => id !== user.id),
         };
 
-      await this.container.client.prisma.match.update(matchUpdate);
-      match.cancelled = true;
+      match = await this.container.client.prisma.match.update(matchUpdate);
+      await updateReadyMessages(match);
+      await this.container.client.prisma.readyMessage.deleteMany({
+        where: { matchId: readyMessage.matchId },
+      });
     }
-
-    await updateReadyMessages(match);
   }
 }

@@ -92,11 +92,11 @@ export async function startMatch(matchId: number) {
     env.MATCH_CATEGORY
   )) as CategoryChannel;
 
-  Promise.all([
-    async () => {
+  await Promise.all([
+    (async () => {
       const channel = await category.guild.channels.create({
         name: `Match #${match.id} - Red Team`,
-        type: ChannelType.GuildVoice,
+        type: ChannelType.GuildText,
         parent: category,
         // TODO: Replace with correct team
         permissionOverwrites: match.playerStats
@@ -107,9 +107,6 @@ export async function startMatch(matchId: number) {
             allow: [
               PermissionFlagsBits.ViewChannel,
               PermissionFlagsBits.SendMessages,
-              PermissionFlagsBits.Connect,
-              PermissionFlagsBits.Speak,
-              PermissionFlagsBits.Stream,
             ],
           })),
       });
@@ -117,11 +114,11 @@ export async function startMatch(matchId: number) {
       const messageContent = `Welcome red team, game on! <@${match.coachId}> will be with you shortly to sort out the details. In the meantime, grab a snack and strategize with your team!`;
       const message = await channel.send(messageContent + "\n<@everyone>");
       await message.edit(messageContent);
-    },
-    async () => {
+    })(),
+    (async () => {
       const channel = await category.guild.channels.create({
         name: `Match #${match.id} - Blue Team`,
-        type: ChannelType.GuildVoice,
+        type: ChannelType.GuildText,
         parent: category,
         // TODO: Replace with correct team
         permissionOverwrites: match.playerStats
@@ -132,9 +129,6 @@ export async function startMatch(matchId: number) {
             allow: [
               PermissionFlagsBits.ViewChannel,
               PermissionFlagsBits.SendMessages,
-              PermissionFlagsBits.Connect,
-              PermissionFlagsBits.Speak,
-              PermissionFlagsBits.Stream,
             ],
           })),
       });
@@ -142,6 +136,6 @@ export async function startMatch(matchId: number) {
       const messageContent = `Welcome blue team, game on! <@${match.coachId}> will be with you shortly to sort out the details. In the meantime, grab a snack and strategize with your team!`;
       const message = await channel.send(messageContent + "\n<@everyone>");
       await message.edit(messageContent);
-    },
+    })(),
   ]);
 }

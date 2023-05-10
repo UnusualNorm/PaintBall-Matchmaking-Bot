@@ -15,8 +15,14 @@ const client = new SapphireClient({
     GatewayIntentBits.Guilds,
     GatewayIntentBits.GuildMessages,
     GatewayIntentBits.MessageContent,
+    GatewayIntentBits.DirectMessageReactions,
   ],
-  partials: [Partials.Reaction],
+  partials: [
+    Partials.Reaction,
+    Partials.Message,
+    Partials.User,
+    Partials.Channel,
+  ],
 });
 
 client.prisma = new PrismaClient();
