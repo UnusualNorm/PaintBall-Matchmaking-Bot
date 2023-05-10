@@ -15,23 +15,21 @@ model Player {
   username String
 
   matches Match[] @relation("PlayerMatches")
+  score   Int     @default(1480)
 
-  coachMatches Match[] @relation("CoachMatches")
+  coach          Boolean @default(false)
+  coachedMatches Match[] @relation("CoachedMatches")
 
   createdAt DateTime @default(now())
-
-  readyMessages  ReadyMessage[]
-  readiedMatches Match[]        @relation("PlayerReadiedMatches")
 }
 
 model Match {
   id      Int      @id @default(autoincrement())
   players Player[] @relation("PlayerMatches")
 
-  readyPlayers  Player[]       @relation("PlayerReadiedMatches")
-  readyMessages ReadyMessage[]
+  readyPlayers String[] @default([])
 
-  coach   Player @relation("CoachMatches", fields: [coachId], references: [id])
+  coach   Player @relation("CoachedMatches", fields: [coachId], references: [id])
   coachId String
 
   winner      String?
@@ -51,18 +49,14 @@ model PlayerMatchStat {
   playerId String
 
   team   String
-  kills  Int
-  deaths Int
+  kills  Int?
+  deaths Int?
 
   @@unique([matchId, playerId])
 }
 
 model ReadyMessage {
-  id String @id
-
-  match   Match @relation(fields: [matchId], references: [id])
-  matchId Int
-
-  player   Player @relation(fields: [playerId], references: [id])
+  id       String @id
+  matchId  Int
   playerId String
 }

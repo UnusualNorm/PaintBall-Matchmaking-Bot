@@ -3,6 +3,7 @@ import { ApplyOptions } from "@sapphire/decorators";
 import { Listener } from "@sapphire/framework";
 
 import { startMatch } from "../utils/matches.js";
+import { updateReadyMessages } from "../utils/matchmaking.js";
 
 @ApplyOptions<Listener.Options>({
   name: "ready",
@@ -10,30 +11,32 @@ import { startMatch } from "../utils/matches.js";
 })
 export class ReadyListener extends Listener {
   public async run(reaction: MessageReaction, user: User) {
+    if (user.bot) return;
     if (reaction.partial) await reaction.fetch();
     if (reaction.emoji.name !== "👍" && reaction.emoji.name !== "👎") return;
     const readied = reaction.emoji.name === "👍";
 
     const readyMessage =
       await this.container.client.prisma.readyMessage.findFirst({
-        where: { messageId: reaction.message.id },
-        include: {
-          match: {
-            include: {
-              readyPlayers: true,
-              players: true,
-            },
-          },
-        },
+        where: { id: reaction.message.id },
       });
 
     if (!readyMessage) return;
-    if (readyMessage.match.cancelled || readyMessage.match.started) return;
+    const match = await this.container.client.prisma.match.findFirst({
+      where: { id: readyMessage.matchId },
+      include: { players: true, playerStats: true },
+    });
 
-    const currentlyReady = !!readyMessage.match.readyPlayers.find(
-      (player) => player.discordId === user.id
-    );
+    if (!match) {
+      await this.container.client.prisma.readyMessage.delete({
+        where: { id: readyMessage.id },
+      });
+      return;
+    }
 
+    if (match.cancelled || match.started) return;
+
+    const currentlyReady = !!match.readyPlayers.includes(user.id);
     if (readied && currentlyReady) return;
 
     if (readied) {
@@ -41,18 +44,13 @@ export class ReadyListener extends Listener {
         where: { id: readyMessage.matchId },
         data: {
           readyPlayers: {
-            connect: {
-              discordId: user.id,
-            },
+            push: user.id,
           },
         },
       });
 
-      if (
-        readyMessage.match.readyPlayers.length + 1 ===
-        readyMessage.match.players.length
-      )
-        startMatch(readyMessage.matchId);
+      if (match.readyPlayers.length + 1 === match.players.length)
+        await startMatch(readyMessage.matchId);
     } else {
       const matchUpdate = {
         where: { id: readyMessage.matchId },
@@ -63,12 +61,13 @@ export class ReadyListener extends Listener {
 
       if (currentlyReady)
         (matchUpdate.data as any).readyPlayers = {
-          disconnect: {
-            discordId: user.id,
-          },
+          set: match.readyPlayers.filter((id) => id !== user.id),
         };
 
       await this.container.client.prisma.match.update(matchUpdate);
+      match.cancelled = true;
     }
+
+    await updateReadyMessages(match);
   }
 }

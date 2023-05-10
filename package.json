@@ -2,6 +2,7 @@
   "name": "paintball-matchmaking-bot",
   "version": "0.1.0",
   "main": "dist/index.js",
+  "type": "module",
   "repository": "https://github.com/UnusualNorm/PaintBall-Matchmaking-Bot",
   "author": "Unusual Norm <40722525+UnusualNorm@users.noreply.github.com>",
   "license": "MIT",
